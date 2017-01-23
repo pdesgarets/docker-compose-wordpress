@@ -2,47 +2,36 @@ version: '2'
 services:
   nginx:
     image: evild/alpine-nginx:1.11.2-libressl
-    container_name: wordpress_nginx
     restart: always
     volumes:
-      - wordpress-data:/var/www/html/:ro
+      - .:/var/www/html
       - ./nginx/conf/nginx.conf:/etc/nginx/conf/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
     ports:
-      - 80:80
-      - 443:443
-    networks:
-      - front
+      - 9980:80
+      - 9443:443
   php:
-    image: evild/alpine-wordpress:4.5.3
-    container_name: wordpress_php
+    build: ./php #evild/alpine-wordpress:4.5.3
     restart: always
     volumes:
-      - wordpress-data:/var/www/html
+      - .:/var/www/html
       - ./php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
     environment:
       - WORDPRESS_DB_NAME=wpdb
+      - WORDPRESS_DB_USER=root
       - WORDPRESS_TABLE_PREFIX=wp_
       - WORDPRESS_DB_HOST=db
-      - WORDPRESS_DB_PASSWORD=password
-    networks:
-      - front
-      - back
+      - WORDPRESS_DB_PASSWORD=SecrPassword
   db:
     image: mariadb:10
-    container_name: wordpress_mariadb
     restart: always
     volumes:
-      - wordpress-db-data:/var/lib/mysql
+      - /tmp/wordpress-db-data:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=password
-    networks:
-      - back
-volumes:
-  wordpress-data:
-    driver: local
-  wordpress-db-data:
-    driver: local
-networks:
-  front:
-  back:
+      - MYSQL_ROOT_PASSWORD=SecrPassword
+
+  pma:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - 8080:80
